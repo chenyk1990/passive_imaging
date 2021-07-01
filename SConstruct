@@ -93,16 +93,18 @@ Result('data_mask3','byte | window max1=1.3 |grey3 flat=n frame1=400 frame2=70 f
 
 #### Part VI: Applying the cross-correlation imaging condition ####
 if ic2:
-	if ng==4:
-		Flow('ccr0',snaps_list,'math a=${SOURCES[1]} b=${SOURCES[2]} c=${SOURCES[3]} output="input^2*a^2*b^2*c^2"')
-	elif ng==6:
-		Flow('ccr0',snaps_list,'math a=${SOURCES[1]} b=${SOURCES[2]} c=${SOURCES[3]} d=${SOURCES[4]} e=${SOURCES[5]} output="input^2*a^2*b^2*c^2*d^2*e^2"')
-	elif ng==8:
-		Flow('ccr0',snaps_list,'math a=${SOURCES[1]} b=${SOURCES[2]} c=${SOURCES[3]} d=${SOURCES[4]} e=${SOURCES[5]} f=${SOURCES[6]} g=${SOURCES[7]} output="input^2*a^2*b^2*c^2*d^2*e^2*f^2*g^2"')
-	elif ng==10:
-		Flow('ccr0',snaps_list,'math a=${SOURCES[1]} b=${SOURCES[2]} c=${SOURCES[3]} d=${SOURCES[4]} e=${SOURCES[5]} f=${SOURCES[6]} g=${SOURCES[7]} h=${SOURCES[8]} i=${SOURCES[9]} output="input^2*a^2*b^2*c^2*d^2*e^2*f^2*g^2*h^2*i^2"')
+  if ng==2:
+    Flow('ccr0',snaps_list,'math a=${SOURCES[1]} output="input^2*a^2"')	
+  elif ng==4:
+    Flow('ccr0',snaps_list,'math a=${SOURCES[1]} b=${SOURCES[2]} c=${SOURCES[3]} output="input^2*a^2*b^2*c^2"')
+  elif ng==6:
+    Flow('ccr0',snaps_list,'math a=${SOURCES[1]} b=${SOURCES[2]} c=${SOURCES[3]} d=${SOURCES[4]} e=${SOURCES[5]} output="input^2*a^2*b^2*c^2*d^2*e^2"')
+  elif ng==8:
+    Flow('ccr0',snaps_list,'math a=${SOURCES[1]} b=${SOURCES[2]} c=${SOURCES[3]} d=${SOURCES[4]} e=${SOURCES[5]} f=${SOURCES[6]} g=${SOURCES[7]} output="input^2*a^2*b^2*c^2*d^2*e^2*f^2*g^2"')
+  elif ng==10:
+    Flow('ccr0',snaps_list,'math a=${SOURCES[1]} b=${SOURCES[2]} c=${SOURCES[3]} d=${SOURCES[4]} e=${SOURCES[5]} f=${SOURCES[6]} g=${SOURCES[7]} h=${SOURCES[8]} i=${SOURCES[9]} output="input^2*a^2*b^2*c^2*d^2*e^2*f^2*g^2*h^2*i^2"')
 else:
-	Flow('ccr0',snaps_list,'cat axis=5 ${SOURCES[1:%d]} | stack prod=y axis=5'%len(snaps_list))
+    Flow('ccr0',snaps_list,'cat axis=5 ${SOURCES[1:%d]} | stack prod=y axis=5'%len(snaps_list))
 
 Flow('location0','ccr0','stack axis=4 |pad beg1=%d end1=%d beg2=%d end2=%d beg3=%d end3=%d| put o1=0 o2=0 o3=0'%(nb,nb,nb,nb,nb,nb))
 
