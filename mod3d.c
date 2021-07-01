@@ -2,6 +2,8 @@
 /*
   written by Chen et al., 2020
   
+  Copyright: The University of Texas at Austin
+  
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
@@ -17,7 +19,9 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
   
   Reference:
-  Chen, Y., O.M. Saad, M. Bai, X. Liu, and S. Fomel, 2021, A compact program for 3D passive seismic source-location imaging, Seismological Research Letters, in press.
+  Chen, Y., O.M. Saad, M. Bai, X. Liu, and S. Fomel, 2021, A compact program for 3D passive seismic source-location imaging, Seismological Research Letters, doi: 10.1785/0220210050.
+  
+  The fully reproducible package (including scripts for all data examples in the paper) is at https://github.com/chenyk1990/reproducible_research/tree/master/passive. 
 */
 
 #include <rsf.h>
