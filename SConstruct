@@ -2,7 +2,7 @@ from rsf.proj import *
 #### COPYRIGHT: Chen et al., 2021, SRL
 # 
 # Reference:
-# Chen, Y., O.M. Saad, M. Bai, X. Liu, and S. Fomel, 2021, A compact program for 3D passive seismic source-location imaging, Seismological Research Letters, in press.
+#   Chen, Y., O.M. Saad, M. Bai, X. Liu, and S. Fomel, 2021, A compact program for 3D passive seismic source-location imaging, Seismological Research Letters, 92(5), 3187–3201.
   
 #### Part I: Specifying parameters ####
 nt=1501		#number of samples
