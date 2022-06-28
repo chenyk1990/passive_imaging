@@ -115,9 +115,9 @@ else:
 Flow('location0','ccr0','stack axis=4 | put o1=0 o2=0 o3=0')
 
 #### Part VII: Plotting the source locations ####
-Result('location1','location0','scale axis=3|threshold1 ifperc=0 thr=0.001|byte verb=y |grey3 flat=n frame1=29 frame2=29 frame3=29 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m point1=0.7 point2=0.6')
-Result('location2','location0','scale axis=3|threshold1 ifperc=0 thr=0.01|byte |grey3 flat=n frame1=39 frame2=39 frame3=39 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m point1=0.7 point2=0.6')
-Result('location3','location0','scale axis=3|threshold1 ifperc=0 thr=0.01|byte |grey3 flat=n frame1=49 frame2=49 frame3=49 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m point1=0.7 point2=0.6')
+Result('location1','location0','scale axis=3|threshold1 ifperc=0 thr=0.002|byte verb=y |grey3 flat=n frame1=29 frame2=29 frame3=29 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m point1=0.7 point2=0.6')
+Result('location2','location0','scale axis=3|threshold1 ifperc=0 thr=0.045|byte |grey3 flat=n frame1=39 frame2=39 frame3=39 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m point1=0.7 point2=0.6')
+Result('location3','location0','scale axis=3|threshold1 ifperc=0 thr=0.02|byte |grey3 flat=n frame1=49 frame2=49 frame3=49 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m point1=0.7 point2=0.6')
 
 
 #### Traditional Time-reversal imaging
@@ -127,8 +127,8 @@ Flow(['img','snaps'],['vel','data','%s'%exe[0]],
          '''%(nb,ct,jsnap))
 Flow('snaps-abs0','snaps','math output="input*input"')
 
-Result('location-tr1','snaps-abs0','window n4=1 f4=50 | put o1=0 o2=0 o3=0 |threshold1 thr=0.08| byte pclip=100|grey3 flat=n frame1=29 frame2=29 frame3=29 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m point1=0.7 point2=0.6')
-Result('location-tr2','snaps-abs0','window n4=1 f4=83 | put o1=0 o2=0 o3=0 |threshold1 thr=0.1| byte pclip=100|grey3 flat=n frame1=39 frame2=39 frame3=39 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m point1=0.7 point2=0.6')
-Result('location-tr3','snaps-abs0','window n4=1 f4=130 |  put o1=0 o2=0 o3=0 |threshold1 thr=0.1| byte clip=10|grey3 flat=n frame1=49 frame2=49 frame3=49 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m point1=0.7 point2=0.6')
+Result('location-tr1','snaps-abs0','window n4=1 f4=50 | put o1=0 o2=0 o3=0 |threshold1 thr=0.04| byte pclip=100|grey3 flat=n frame1=29 frame2=29 frame3=29 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m point1=0.7 point2=0.6')
+Result('location-tr2','snaps-abs0','window n4=1 f4=83 | put o1=0 o2=0 o3=0 |threshold1 thr=0.05| byte pclip=100|grey3 flat=n frame1=39 frame2=39 frame3=39 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m point1=0.7 point2=0.6')
+Result('location-tr3','snaps-abs0','window n4=1 f4=130 |  put o1=0 o2=0 o3=0 |threshold1 thr=0.05| byte clip=10|grey3 flat=n frame1=49 frame2=49 frame3=49 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m point1=0.7 point2=0.6')
 
 End()
