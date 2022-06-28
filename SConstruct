@@ -1,9 +1,10 @@
 from rsf.proj import *
-#### COPYRIGHT: Chen et al., 2021, SRL
-# 
+#### COPYRIGHT: Chen et al. (2021)
+#### The University of Texas at Austin
 # Reference:
 #   Chen, Y., O.M. Saad, M. Bai, X. Liu, and S. Fomel, 2021, A compact program for 3D passive seismic source-location imaging, Seismological Research Letters, 92(5), 3187–3201.
-  
+
+
 #### Part I: Specifying parameters ####
 nt=1501		#number of samples
 dt=0.001	#temporal sampling
@@ -11,9 +12,9 @@ nb=30		#size of ABC layers
 ct=0.01		#ABC parameter
 jsnap=4		#output wavefield interval
 ng=4 		#number of groups
-nz=141		#samples in Z
-nx=141		#samples in X
-ny=141 		#samples in Y
+nz=81		#samples in Z
+nx=81		#samples in X
+ny=81 		#samples in Y
 dz=20		#sampling in Z
 dx=20		#sampling in X
 dy=20		#sampling in Y
@@ -21,9 +22,9 @@ ic2=1		#squared cross-correlation IC
 
 #for synthetic test
 ns=3
-sz='50,70,90'
-sx='50,60,70'
-sy='50,60,70'
+sz='30,40,50'
+sx='30,40,50'
+sy='30,40,50'
 f='10,10,10'
 t='0.2,0.35,0.5'
 A='1,2,2'
@@ -44,14 +45,14 @@ Flow('src',None,
      '''%(nz,nx,ny,dz,dx,dy,ns,sz,sx,sy))
 Flow('sov','vel src','add mode=a ${SOURCES[1]} ')
 ## plotting the velocity models with highlights on source locations
-Result('vel1','vel src','add mode=a ${SOURCES[1]} |byte bar=bar.rsf mean=y|grey3  flat=n allpos=y bias=1500 color=j scalebar=n maxval=2200 title="Source Location and Velocity Model" barlabel="V" barunit="m/s" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m frame1=49 frame2=49 frame3=49 scalebar=y')
-Result('vel2','vel src','add mode=a ${SOURCES[1]} |byte bar=bar.rsf mean=y|grey3  flat=n allpos=y bias=1500 color=j scalebar=n maxval=2200 title="Source Location and Velocity Model" barlabel="V" barunit="m/s" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m frame1=69 frame2=59 frame3=59 scalebar=y')
-Result('vel3','vel src','add mode=a ${SOURCES[1]} |byte bar=bar.rsf mean=y|grey3  flat=n allpos=y bias=1500 color=j scalebar=n maxval=2200 title="Source Location and Velocity Model" barlabel="V" barunit="m/s" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m frame1=89 frame2=69 frame3=69 scalebar=y')
+Result('vel1','vel src','add mode=a ${SOURCES[1]} |byte bar=bar.rsf mean=y|grey3  flat=n allpos=y bias=1500 color=j scalebar=n maxval=2200 title="Source Location and Velocity Model" barlabel="V" barunit="m/s" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m frame1=29 frame2=29 frame3=29 scalebar=y point1=0.7 point2=0.6')
+Result('vel2','vel src','add mode=a ${SOURCES[1]} |byte bar=bar.rsf mean=y|grey3  flat=n allpos=y bias=1500 color=j scalebar=n maxval=2200 title="Source Location and Velocity Model" barlabel="V" barunit="m/s" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m frame1=39 frame2=39 frame3=39 scalebar=y point1=0.7 point2=0.6')
+Result('vel3','vel src','add mode=a ${SOURCES[1]} |byte bar=bar.rsf mean=y|grey3  flat=n allpos=y bias=1500 color=j scalebar=n maxval=2200 title="Source Location and Velocity Model" barlabel="V" barunit="m/s" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m frame1=49 frame2=49 frame3=49 scalebar=y point1=0.7 point2=0.6')
 
 #### Part IV: Generating/Inputing the recorded passive seismic data ####
-Flow('data0','vel %s'%exe[0],
+Flow('data0 wfds vpad','vel %s'%exe[0],
      '''
-     ./${SOURCES[1]} verb=y cmplx=n ps=y nt=%d dt=%g jsnap=1 abc=y nbt=%d ct=%g src=0 ns=%d
+     ./${SOURCES[1]} snaps=${TARGETS[1]} verb=y cmplx=n ps=y nt=%d dt=%g jsnap=1 abc=y nbt=%d ct=%g src=0 ns=%d vpad=${TARGETS[2]}
      spz=%s
      spx=%s
      spy=%s
@@ -60,12 +61,17 @@ Flow('data0','vel %s'%exe[0],
      A=%s
      '''%(nt,dt,nb,ct,ns,sz,sx,sy,f,t,A))
 ## add noise and sub samples
-Flow('data','data0','noise var=0.001 type=y seed=12005|window j2=1 j3=1')
-Result('data','data','byte | window max1=1.3 |grey3 flat=n frame1=300 frame2=30 frame3=10 clip=1.0 title="Synthetic data" unit2=m')
+Flow('data','data0','noise var=0.0000001 type=y seed=12005|window j2=1 j3=1')
+Result('data','data','byte | grey3 flat=n frame1=400 frame2=30 frame3=10 clip=1.0 title="Synthetic data" unit2=m unit3=m point1=0.7 point2=0.6 point1=0.7 point2=0.6')
+
+Result('vpad','vpad','byte bar=bar.rsf mean=y |grey3  flat=n allpos=y bias=1500 color=j scalebar=n maxval=2200 title="Source Location and Velocity Model" barlabel="V" barunit="m/s" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m frame1=79 frame2=79 frame3=79 scalebar=y point1=0.7 point2=0.6')
 
 #### Part V: Backward propagating of the grouped receiver wavefield ####
-dg=(int)(nx-nb*2)/ng
-print('Group interval is',dg)
+dg=(int)(nx)/ng
+#for python3 use
+#print('Group interval is %d'%dg)
+#for python2 use
+# print 'Group interval is',dg
 snaps_list = []
 src_list = ''
 for i in range(ng):
@@ -74,7 +80,7 @@ for i in range(ng):
     img = 'img%d' %i
     snaps = 'snaps%d' %i
     
-    Flow(mask,None,'spike n1=%d n2=%d mag=1 k1=%d l1=%d k2=%d l2=%d | sfdd type=int' %(nx-nb*2,ny-nb*2,dg*i+1,dg*i+dg,1,ny-nb*2))
+    Flow(mask,None,'spike n1=%d n2=%d mag=1 k1=%d l1=%d k2=%d l2=%d | sfdd type=int' %(nx,ny,dg*i+1,dg*i+dg,1,ny))
     Flow(data,['data',mask],'headercut mask=${SOURCES[1]}')
     Flow([img,snaps],['vel',data,'%s'%exe[0]],
          '''
@@ -86,10 +92,10 @@ for i in range(ng):
     src_list += ' ${SOURCES[%d]}' %(i+1)
 
 ## view the grouped data
-Result('data_mask0','byte | window max1=1.3 |grey3 flat=n frame1=400 frame2=10 frame3=40 clip=0.5 title="Group 1" label2="Distance in X" label3="Distance in Y" unit2=m')
-Result('data_mask1','byte | window max1=1.3 |grey3 flat=n frame1=400 frame2=30 frame3=40 clip=0.5 title="Group 2" label2="Distance in X" label3="Distance in Y" unit2=m')
-Result('data_mask2','byte | window max1=1.3 |grey3 flat=n frame1=400 frame2=50 frame3=40 clip=0.5 title="Group 3" label2="Distance in X" label3="Distance in Y" unit2=m')
-Result('data_mask3','byte | window max1=1.3 |grey3 flat=n frame1=400 frame2=70 frame3=40 clip=0.5 title="Group 4" label2="Distance in X" label3="Distance in Y" unit2=m')
+Result('data_mask0','byte | window max1=1.3 |grey3 flat=n frame1=400 frame2=10 frame3=40 clip=0.5 title="Group 1" label2="Distance in X" label3="Distance in Y" unit2=m unit3=m point1=0.7 point2=0.6')
+Result('data_mask1','byte | window max1=1.3 |grey3 flat=n frame1=400 frame2=30 frame3=40 clip=0.5 title="Group 2" label2="Distance in X" label3="Distance in Y" unit2=m unit3=m point1=0.7 point2=0.6')
+Result('data_mask2','byte | window max1=1.3 |grey3 flat=n frame1=400 frame2=50 frame3=40 clip=0.5 title="Group 3" label2="Distance in X" label3="Distance in Y" unit2=m unit3=m point1=0.7 point2=0.6')
+Result('data_mask3','byte | window max1=1.3 |grey3 flat=n frame1=400 frame2=70 frame3=40 clip=0.5 title="Group 4" label2="Distance in X" label3="Distance in Y" unit2=m unit3=m point1=0.7 point2=0.6')
 
 #### Part VI: Applying the cross-correlation imaging condition ####
 if ic2:
@@ -106,12 +112,23 @@ if ic2:
 else:
     Flow('ccr0',snaps_list,'cat axis=5 ${SOURCES[1:%d]} | stack prod=y axis=5'%len(snaps_list))
 
-Flow('location0','ccr0','stack axis=4 |pad beg1=%d end1=%d beg2=%d end2=%d beg3=%d end3=%d| put o1=0 o2=0 o3=0'%(nb,nb,nb,nb,nb,nb))
+Flow('location0','ccr0','stack axis=4 | put o1=0 o2=0 o3=0')
 
 #### Part VII: Plotting the source locations ####
-Result('location1','location0','threshold1 thr=0.08|byte |grey3 flat=n frame1=50 frame2=50 frame3=49 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m')
-Result('location2','location0','threshold1 thr=0.08|byte |grey3 flat=n frame1=70 frame2=60 frame3=60 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m')
-Result('location3','location0','threshold1 thr=0.08|byte |grey3 flat=n frame1=85 frame2=70 frame3=70 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m')
+Result('location1','location0','scale axis=3|threshold1 ifperc=0 thr=0.001|byte verb=y |grey3 flat=n frame1=29 frame2=29 frame3=29 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m point1=0.7 point2=0.6')
+Result('location2','location0','scale axis=3|threshold1 ifperc=0 thr=0.01|byte |grey3 flat=n frame1=39 frame2=39 frame3=39 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m point1=0.7 point2=0.6')
+Result('location3','location0','scale axis=3|threshold1 ifperc=0 thr=0.01|byte |grey3 flat=n frame1=49 frame2=49 frame3=49 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m point1=0.7 point2=0.6')
 
+
+#### Traditional Time-reversal imaging
+Flow(['img','snaps'],['vel','data','%s'%exe[0]],
+         '''
+         ./${SOURCES[2]} snaps=${TARGETS[1]} verb=y cmplx=n vref=1500 ps=y abc=y nbt=%d ct=%g tri=y dat=${SOURCES[1]} jsnap=%d
+         '''%(nb,ct,jsnap))
+Flow('snaps-abs0','snaps','math output="input*input"')
+
+Result('location-tr1','snaps-abs0','window n4=1 f4=50 | put o1=0 o2=0 o3=0 |threshold1 thr=0.08| byte pclip=100|grey3 flat=n frame1=29 frame2=29 frame3=29 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m point1=0.7 point2=0.6')
+Result('location-tr2','snaps-abs0','window n4=1 f4=83 | put o1=0 o2=0 o3=0 |threshold1 thr=0.1| byte pclip=100|grey3 flat=n frame1=39 frame2=39 frame3=39 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m point1=0.7 point2=0.6')
+Result('location-tr3','snaps-abs0','window n4=1 f4=130 |  put o1=0 o2=0 o3=0 |threshold1 thr=0.1| byte clip=10|grey3 flat=n frame1=49 frame2=49 frame3=49 pclip=99.999999 title="Source Location Image" label1=Depth label2="Distance in X" label3="Distance in Y" unit1=m unit2=m unit3=m point1=0.7 point2=0.6')
 
 End()

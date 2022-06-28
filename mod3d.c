@@ -87,9 +87,123 @@ void ricker_close(void)
 }
 
 /** Part II: Absorbing boundary condition ********/
+/*Note: more powerful and efficient ABC can be incorporated*/
 static int nx, ny, nz, nx2, ny2, nz2, nbt, nbb, nblx, nbrx, nbly, nbry;
 static float ct, cb, clx, crx, cly, cry;
 static float *wt, *wb, *wlx, *wrx, *wly, *wry;
+
+void vel_expand(float *vel, 				/* input velocity */
+				float *vel2,				/* output velocity */
+				int nz,   int nx,   int ny, /* size of input velocity */
+				int nbt,  int nbb, 			/* ABC size in z  */
+				int nblx, int nbrx,			/* ABC size in x  */
+				int nbly, int nbry			/* ABC size in y  */)
+/*< expand velocity model for ABC, revised on June 2022 YC>*/
+{
+	int i,j,iz,ix,iy;
+
+#ifdef _OPENMP
+#pragma omp parallel default(shared) private(iz,ix,iy,i,j)
+{
+#endif
+    for (iz=0; iz < nz; iz++) {  
+        for (ix=0; ix < nx; ix++) {
+        for (iy=0; iy < ny; iy++) {
+	  	i = (nz+nbt+nbb)*(nx+nblx+nbrx)*(iy+nbly) + (nz+nbt+nbb)*(ix+nblx) + iz+nbt;
+	  	j = nz*nx*iy + nz*ix + iz;
+	  	vel2[i] = vel[j];
+        }
+        }
+    }
+    
+	/*top*/
+#ifdef _OPENMP
+#pragma omp for
+#endif
+    for (iz=0; iz < nbt; iz++) {  
+        for (ix=0; ix < nx+nblx+nbrx; ix++) {
+        for (iy=0; iy < ny+nbly+nbry; iy++) {
+	  	i = (nz+nbt+nbb)*(nx+nblx+nbrx)*iy + (nz+nbt+nbb)*ix + iz;
+	  	j = (nz+nbt+nbb)*(nx+nblx+nbrx)*iy + (nz+nbt+nbb)*ix + nbt;
+	  	vel2[i] = vel2[j];
+        }
+        }
+    }
+	
+	/*bottom*/
+#ifdef _OPENMP
+#pragma omp for
+#endif
+    for (iz=0; iz < nbb; iz++) {  
+        for (ix=0; ix < nx+nblx+nbrx; ix++) {
+        for (iy=0; iy < ny+nbly+nbry; iy++) {
+	  	i = (nz+nbt+nbb)*(nx+nblx+nbrx)*iy + (nz+nbt+nbb)*ix + (nz+nbt+nbb-1-iz);
+	  	j = (nz+nbt+nbb)*(nx+nblx+nbrx)*iy + (nz+nbt+nbb)*ix + (nz+nbt-1);
+	  	vel2[i] = vel2[j];
+        }
+        }
+    }
+
+	/*left x*/
+#ifdef _OPENMP
+#pragma omp for
+#endif
+    for (iz=0; iz < nz+nbt+nbb; iz++) {  
+        for (ix=0; ix < nblx; ix++) {
+        for (iy=0; iy < ny+nbly+nbry; iy++) {
+	  	i = (nz+nbt+nbb)*(nx+nblx+nbrx)*iy + (nz+nbt+nbb)*ix + iz;
+	  	j = (nz+nbt+nbb)*(nx+nblx+nbrx)*iy + (nz+nbt+nbb)*nblx  + iz;
+	  	vel2[i] = vel2[j];
+        }
+        }
+    }
+    
+	/*right x*/
+#ifdef _OPENMP
+#pragma omp for
+#endif
+    for (iz=0; iz < nz+nbt+nbb; iz++) {  
+        for (ix=0; ix < nbrx; ix++) {
+        for (iy=0; iy < ny+nbly+nbry; iy++) {
+	  	i = (nz+nbt+nbb)*(nx+nblx+nbrx)*iy + (nz+nbt+nbb)*(nx+nblx+nbrx-1-ix) + iz;
+	  	j = (nz+nbt+nbb)*(nx+nblx+nbrx)*iy + (nz+nbt+nbb)*(nx+nblx-1) + iz;
+	  	vel2[i] = vel2[j];
+        }
+        }
+    }  
+    
+	/*left y*/
+#ifdef _OPENMP
+#pragma omp for
+#endif
+    for (iz=0; iz < nz+nbt+nbb; iz++) {  
+        for (ix=0; ix < nx+nblx+nbrx; ix++) {
+        for (iy=0; iy < nbly; iy++) {
+	  	i = (nz+nbt+nbb)*(nx+nblx+nbrx)*iy + (nz+nbt+nbb)*ix + iz;
+	  	j = (nz+nbt+nbb)*(nx+nblx+nbrx)*nbly + (nz+nbt+nbb)*ix + iz;
+	  	vel2[i] = vel2[j];
+        }
+        }
+    }
+    
+	/*right y*/
+#ifdef _OPENMP
+#pragma omp for
+#endif
+    for (iz=0; iz < nz+nbt+nbb; iz++) {  
+        for (ix=0; ix < nx+nblx+nbrx; ix++) {
+        for (iy=0; iy < nbry; iy++) {
+	  	i = (nz+nbt+nbb)*(nx+nblx+nbrx)*(ny+nbly+nbry-1-iy) + (nz+nbt+nbb)*ix + iz;
+	  	j = (nz+nbt+nbb)*(nx+nblx+nbrx)*(ny+nbly-1) + (nz+nbt+nbb)*ix + iz;
+	  	vel2[i] = vel2[j];
+        }
+        }
+    }  
+
+#ifdef _OPENMP
+}
+#endif
+}
 
 void abc_cal(int abc /* decaying type*/,
              int nb  /* absorbing layer length*/, 
@@ -255,7 +369,6 @@ void abc_apply(float *a /*2-D matrix*/)
         }
         }
     }
-
 #ifdef _OPENMP
 }
 #endif
@@ -783,8 +896,8 @@ int psm(float **wvfld, float ***dat, float **dat_v, float *img, float *vel, psmp
 	    for(iy=-1;iy<=1;iy++) {
 	    for(ix=-1;ix<=1;ix++) {
 	      for(iz=-1;iz<=1;iz++) {
-		ik = spz[i]+iz+nz*(spx[i]+ix)+nz*nx*(spy[i]+iy);
-		j = spz[i]+iz+nz2*(spx[i]+ix)+nz2*nx2*(spy[i]+iy);
+		ik = (spz[i]+nbt)+iz+nz*(spx[i]+nblx+ix)+nz*nx*(spy[i]+nbly+iy);
+		j = (spz[i]+nbt)+iz+nz2*(spx[i]+nblx+ix)+nz2*nx2*(spy[i]+nbly+iy);
 		if (src==0) {
 		  curr[j] += vv[ik]*rick[i][it]/(abs(ix)+abs(iy)+abs(iz)+1);
 		} else {
@@ -884,7 +997,7 @@ int main(int argc, char* argv[])
     bool  cmplx;
     int   pad1;
     /*absorbing boundary*/
-    bool abc;
+    bool abc,ifvpad;
     int nbt, nbb, nblx, nbrx, nbly, nbry; /*boundaries for top/bottom, left/right x, left/right y*/
     float ct,cb,clx,crx,cly,cry; 		  /*decaying parameter*/
     /*source parameters*/
@@ -898,8 +1011,8 @@ int main(int argc, char* argv[])
     psmpar par;
     int nx1, ny1, nz1; /*domain of interest*/
     int it;
-    float *vel,***dat,**dat_v,**wvfld,*img; /*velocity profile*/
-    sf_file Fi,Fo,Fd,Fd_v,snaps; /* I/O files */
+    float *vel,*vel2,***dat,**dat_v,**wvfld,*img; /*velocity profile*/
+    sf_file Fi,Fo,Fd,Fd_v,snaps,Fvpad; /* I/O files */
     sf_axis az,ax,ay; /* cube axes */
 
     sf_init(argc,argv);
@@ -937,6 +1050,8 @@ int main(int argc, char* argv[])
     /* setup I/O files */
     Fi = sf_input ("in");
     Fo = sf_output("out");
+    
+    
     if (tri) {
       gplx = -1;
       gply = -1;
@@ -995,9 +1110,16 @@ int main(int argc, char* argv[])
     ax = sf_iaxa(Fi,2); nx = sf_n(ax); dx = sf_d(ax);
     ay = sf_iaxa(Fi,3); ny = sf_n(ay); dy = sf_d(ay);
 
-    nz1 = nz-nbt-nbb;
-    nx1 = nx-nblx-nbrx;
-    ny1 = ny-nbly-nbry;
+
+    /*change on Jun 2022, YC*/
+    nz1 = nz;
+    nx1 = nx;
+    ny1 = ny;
+    nz = nz+nbt+nbb;
+    nx = nx+nblx+nbrx;
+    ny = ny+nbly+nbry;
+    /*change on Jun 2022, YC*/
+    
     if(verb)sf_warning("ny=%d,nbly=%d,nbry=%d",ny,nbly,nbry);
     if(verb)sf_warning("nz1=%d,nx1=%d,ny1=%d",nz1,nx1,ny1);
     if (gpx==-1) gpx = nblx;
@@ -1050,6 +1172,18 @@ int main(int argc, char* argv[])
       } else Fd_v = NULL;
     }
 
+    if (NULL!=sf_getstring("vpad")) {
+	   Fvpad=sf_output("vpad");
+       sf_putint(Fvpad,"n1",nz);
+       sf_putint(Fvpad,"n2",nx);
+       sf_putint(Fvpad,"n3",ny);
+       ifvpad=true;
+      } else 
+      {
+      Fvpad = NULL;
+       ifvpad=false;
+      }
+      
     if (jsnap > 0) {
 	snaps = sf_output("snaps");
 	/* (optional) snapshot file */
@@ -1067,7 +1201,8 @@ int main(int argc, char* argv[])
     } else snaps = NULL;
 
     par = (psmpar) sf_alloc(1,sizeof(*par));
-    vel = sf_floatalloc(nz*ny*nx);
+    vel = sf_floatalloc(nz1*ny1*nx1); 	/*change on Jun 2022, YC*/
+    vel2= sf_floatalloc(nz*ny*nx); 		/*change on Jun 2022, YC*/
     
     if (tri && NULL==Fd) {dat = NULL;  }
     else { dat = sf_floatalloc3(nt,gplx,gply);}
@@ -1082,8 +1217,9 @@ int main(int argc, char* argv[])
     else wvfld = NULL;
     
 
-    sf_floatread(vel,nz*ny*nx,Fi);
-
+    sf_floatread(vel,nz1*ny1*nx1,Fi);
+	vel_expand(vel,vel2,nz1,nx1,ny1,nbt,nbb,nblx,nbrx,nbly,nbry);  /*change on Jun 2022, YC*/
+	
     if (tri) {
       if (NULL!=Fd)   sf_floatread(dat[0][0],gplx*gply*nt,Fd);
       if (NULL!=Fd_v) sf_floatread(dat_v[0],gpl_v*nt,Fd_v);
@@ -1134,7 +1270,7 @@ int main(int argc, char* argv[])
     par->vref  = vref;
 
     /*do the work*/
-    psm(wvfld, dat, dat_v, img, vel, par, tri);
+    psm(wvfld, dat, dat_v, img, vel2, par, tri);
 
     if (tri) {
       sf_floatwrite(img,nz1*ny1*nx1,Fo);
@@ -1146,6 +1282,9 @@ int main(int argc, char* argv[])
 
     if (jsnap>0)
       sf_floatwrite(wvfld[0],nz1*nx1*ny1*ntsnap,snaps);
-    
+      
+    if(ifvpad)
+    	sf_floatwrite(vel2,nz*nx*ny,Fvpad);
+      
     exit (0);
 }
